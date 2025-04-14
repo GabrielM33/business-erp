@@ -8,10 +8,49 @@ import { Button } from "@/components/ui/button";
 import { useKpi } from "@/context/KpiContext";
 import { KpiGoal } from "@/types/kpi";
 import { RefreshCw } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DailyKPIs() {
-  const { kpiData, resetDailyValues } = useKpi();
+  const { kpiData, resetDailyValues, isLoading } = useKpi();
   const [selectedKpi, setSelectedKpi] = useState<{ kpi: KpiGoal; category: string } | null>(null);
+  
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h1 className="text-3xl font-bold tracking-tight">Daily KPIs</h1>
+        </div>
+        
+        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+          {[...Array(5)].map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardHeader className="pb-2">
+                <Skeleton className="h-4 w-24" />
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-7 w-16" />
+                <Skeleton className="h-2 w-full" />
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-4 w-20" />
+                  <Skeleton className="h-4 w-8" />
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+        
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-6 w-48" />
+            <Skeleton className="h-4 w-72" />
+          </CardHeader>
+          <CardContent>
+            <Skeleton className="h-[400px] w-full" />
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
   
   return (
     <div className="space-y-6">

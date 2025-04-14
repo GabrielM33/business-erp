@@ -2,6 +2,9 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { KpiData, KpiGoal, TimeFrame, GoalCategory } from "@/types/kpi";
 import { v4 as uuidv4 } from "@/lib/uuid";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/context/AuthContext";
+import { useToast } from "@/hooks/use-toast";
 
 const initialKpiData: KpiData = {
   daily: {
@@ -112,21 +115,102 @@ interface KpiContextType {
   resetDailyValues: () => void;
   resetWeeklyValues: () => void;
   resetMonthlyValues: () => void;
+  isLoading: boolean;
 }
 
 const KpiContext = createContext<KpiContextType | undefined>(undefined);
 
 export const KpiProvider = ({ children }: { children: ReactNode }) => {
-  const [kpiData, setKpiData] = useState<KpiData>(() => {
-    const savedData = localStorage.getItem('kpiData');
-    return savedData ? JSON.parse(savedData) : initialKpiData;
-  });
+  const [kpiData, setKpiData] = useState<KpiData>(initialKpiData);
+  const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { toast } = useToast();
 
+  // Load KPI goals from Supabase when user logs in
   useEffect(() => {
-    localStorage.setItem('kpiData', JSON.stringify(kpiData));
-  }, [kpiData]);
+    const loadKpiGoals = async () => {
+      if (!user) return;
+      
+      setIsLoading(true);
+      try {
+        // Fetch all user's KPI goals
+        const { data, error } = await supabase
+          .from('kpi_goals')
+          .select('*')
+          .eq('user_id', user.id);
+          
+        if (error) throw error;
+        
+        if (data && data.length > 0) {
+          // Create a temporary copy of the initial KPI data
+          const newKpiData = { ...initialKpiData };
+          
+          // Update the targets based on the goals from the database
+          data.forEach(goal => {
+            const { time_frame, category, min_target, max_target } = goal;
+            
+            if (time_frame === 'daily' && category in newKpiData.daily) {
+              newKpiData.daily[category as keyof typeof newKpiData.daily].target = {
+                min: min_target,
+                max: max_target
+              };
+            } else if (time_frame === 'weekly' && category in newKpiData.weekly) {
+              newKpiData.weekly[category as keyof typeof newKpiData.weekly].target = {
+                min: min_target,
+                max: max_target
+              };
+            } else if (time_frame === 'monthly' && category in newKpiData.monthly) {
+              newKpiData.monthly[category as keyof typeof newKpiData.monthly].target = {
+                min: min_target,
+                max: max_target
+              };
+            }
+          });
+          
+          // Fetch the latest KPI entries for each category
+          const today = new Date().toISOString().split('T')[0];
+          const { data: entriesData, error: entriesError } = await supabase
+            .from('kpi_entries')
+            .select('*')
+            .eq('user_id', user.id)
+            .eq('entry_date', today);
+            
+          if (entriesError) throw entriesError;
+          
+          // Update current values based on today's entries
+          if (entriesData && entriesData.length > 0) {
+            entriesData.forEach(entry => {
+              const { time_frame, category, value } = entry;
+              
+              if (time_frame === 'daily' && category in newKpiData.daily) {
+                newKpiData.daily[category as keyof typeof newKpiData.daily].currentValue = value;
+              } else if (time_frame === 'weekly' && category in newKpiData.weekly) {
+                newKpiData.weekly[category as keyof typeof newKpiData.weekly].currentValue = value;
+              } else if (time_frame === 'monthly' && category in newKpiData.monthly) {
+                newKpiData.monthly[category as keyof typeof newKpiData.monthly].currentValue = value;
+              }
+            });
+          }
+          
+          setKpiData(newKpiData);
+        }
+      } catch (error: any) {
+        toast({
+          title: "Error loading KPI data",
+          description: error.message,
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadKpiGoals();
+  }, [user]);
 
-  const updateKpiValue = (timeFrame: TimeFrame, category: string, value: number) => {
+  const updateKpiValue = async (timeFrame: TimeFrame, category: string, value: number) => {
+    if (!user) return;
+    
     setKpiData(prevData => {
       const newData = { ...prevData };
       
@@ -158,9 +242,59 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
       
       return newData;
     });
+    
+    // Save to Supabase
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Check if entry exists for today
+      const { data, error } = await supabase
+        .from('kpi_entries')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('time_frame', timeFrame)
+        .eq('category', category)
+        .eq('entry_date', today)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        throw error;
+      }
+      
+      if (data?.id) {
+        // Update existing entry
+        const { error: updateError } = await supabase
+          .from('kpi_entries')
+          .update({ value })
+          .eq('id', data.id);
+          
+        if (updateError) throw updateError;
+      } else {
+        // Insert new entry
+        const { error: insertError } = await supabase
+          .from('kpi_entries')
+          .insert({ 
+            user_id: user.id,
+            time_frame: timeFrame,
+            category,
+            value,
+            entry_date: today
+          });
+          
+        if (insertError) throw insertError;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error saving data",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const updateGoalTarget = (timeFrame: TimeFrame, category: string, min: number, max: number) => {
+  const updateGoalTarget = async (timeFrame: TimeFrame, category: string, min: number, max: number) => {
+    if (!user) return;
+    
     setKpiData(prevData => {
       const newData = { ...prevData };
       
@@ -192,71 +326,125 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
       
       return newData;
     });
+    
+    // Save to Supabase
+    try {
+      // Check if goal exists
+      const { data, error } = await supabase
+        .from('kpi_goals')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('time_frame', timeFrame)
+        .eq('category', category)
+        .single();
+        
+      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+        throw error;
+      }
+      
+      if (data?.id) {
+        // Update existing goal
+        const { error: updateError } = await supabase
+          .from('kpi_goals')
+          .update({ 
+            min_target: min,
+            max_target: max,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', data.id);
+          
+        if (updateError) throw updateError;
+      } else {
+        // Insert new goal
+        const { error: insertError } = await supabase
+          .from('kpi_goals')
+          .insert({ 
+            user_id: user.id,
+            time_frame: timeFrame,
+            category,
+            min_target: min,
+            max_target: max
+          });
+          
+        if (insertError) throw insertError;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error saving goal",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const addHistoryEntry = (date: string, metrics: Record<string, number>) => {
+  const addHistoryEntry = async (date: string, metrics: Record<string, number>) => {
+    if (!user) return;
+    
     setKpiData(prevData => ({
       ...prevData,
       history: [...prevData.history, { date, metrics }]
     }));
+    
+    // This would need additional logic to store history in Supabase
+    // Currently not implemented
   };
 
-  const resetDailyValues = () => {
-    setKpiData(prevData => {
-      const newDaily = { ...prevData.daily };
+  const resetValues = async (timeFrame: TimeFrame) => {
+    if (!user) return;
+    
+    const today = new Date().toISOString().split('T')[0];
+    
+    try {
+      // Delete entries for today for the specified timeFrame
+      const { error } = await supabase
+        .from('kpi_entries')
+        .delete()
+        .eq('user_id', user.id)
+        .eq('time_frame', timeFrame)
+        .eq('entry_date', today);
+        
+      if (error) throw error;
       
-      // Type-safe way to reset each value
-      (Object.keys(newDaily) as Array<keyof typeof newDaily>).forEach(key => {
-        newDaily[key] = {
-          ...newDaily[key],
-          currentValue: 0
-        };
+      // Update local state
+      setKpiData(prevData => {
+        const newData = { ...prevData };
+        
+        if (timeFrame === 'daily') {
+          // Reset all daily values
+          Object.keys(newData.daily).forEach(key => {
+            newData.daily[key as keyof typeof newData.daily].currentValue = 0;
+          });
+        } else if (timeFrame === 'weekly') {
+          // Reset all weekly values
+          Object.keys(newData.weekly).forEach(key => {
+            newData.weekly[key as keyof typeof newData.weekly].currentValue = 0;
+          });
+        } else if (timeFrame === 'monthly') {
+          // Reset all monthly values
+          Object.keys(newData.monthly).forEach(key => {
+            newData.monthly[key as keyof typeof newData.monthly].currentValue = 0;
+          });
+        }
+        
+        return newData;
       });
       
-      return {
-        ...prevData,
-        daily: newDaily
-      };
-    });
+      toast({
+        title: `${timeFrame.charAt(0).toUpperCase() + timeFrame.slice(1)} values reset`,
+        description: "All values have been reset to zero"
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error resetting values",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
   };
 
-  const resetWeeklyValues = () => {
-    setKpiData(prevData => {
-      const newWeekly = { ...prevData.weekly };
-      
-      // Type-safe way to reset each value
-      (Object.keys(newWeekly) as Array<keyof typeof newWeekly>).forEach(key => {
-        newWeekly[key] = {
-          ...newWeekly[key],
-          currentValue: 0
-        };
-      });
-      
-      return {
-        ...prevData,
-        weekly: newWeekly
-      };
-    });
-  };
-
-  const resetMonthlyValues = () => {
-    setKpiData(prevData => {
-      const newMonthly = { ...prevData.monthly };
-      
-      // Type-safe way to reset each value
-      (Object.keys(newMonthly) as Array<keyof typeof newMonthly>).forEach(key => {
-        newMonthly[key] = {
-          ...newMonthly[key],
-          currentValue: 0
-        };
-      });
-      
-      return {
-        ...prevData,
-        monthly: newMonthly
-      };
-    });
-  };
+  const resetDailyValues = () => resetValues('daily');
+  const resetWeeklyValues = () => resetValues('weekly');
+  const resetMonthlyValues = () => resetValues('monthly');
 
   return (
     <KpiContext.Provider 
@@ -267,7 +455,8 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
         addHistoryEntry,
         resetDailyValues,
         resetWeeklyValues,
-        resetMonthlyValues
+        resetMonthlyValues,
+        isLoading
       }}
     >
       {children}
