@@ -1,6 +1,5 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import { KpiData, KpiGoal, TimeFrame, GoalCategory } from "@/types/kpi";
+import { KpiData, KpiGoal, TimeFrame } from "@/types/kpi";
 import { v4 as uuidv4 } from "@/lib/uuid";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/context/AuthContext";
@@ -126,14 +125,12 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const { toast } = useToast();
 
-  // Load KPI goals from Supabase when user logs in
   useEffect(() => {
     const loadKpiGoals = async () => {
       if (!user) return;
       
       setIsLoading(true);
       try {
-        // Fetch all user's KPI goals
         const { data, error } = await supabase
           .from('kpi_goals')
           .select('*')
@@ -142,10 +139,8 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
         if (error) throw error;
         
         if (data && data.length > 0) {
-          // Create a temporary copy of the initial KPI data
           const newKpiData = { ...initialKpiData };
           
-          // Update the targets based on the goals from the database
           data.forEach(goal => {
             const { time_frame, category, min_target, max_target } = goal;
             
@@ -167,7 +162,6 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
             }
           });
           
-          // Fetch the latest KPI entries for each category
           const today = new Date().toISOString().split('T')[0];
           const { data: entriesData, error: entriesError } = await supabase
             .from('kpi_entries')
@@ -177,7 +171,6 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
             
           if (entriesError) throw entriesError;
           
-          // Update current values based on today's entries
           if (entriesData && entriesData.length > 0) {
             entriesData.forEach(entry => {
               const { time_frame, category, value } = entry;
@@ -243,11 +236,9 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
       return newData;
     });
     
-    // Save to Supabase
     try {
       const today = new Date().toISOString().split('T')[0];
       
-      // Check if entry exists for today
       const { data, error } = await supabase
         .from('kpi_entries')
         .select('id')
@@ -257,12 +248,11 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
         .eq('entry_date', today)
         .single();
         
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
       
       if (data?.id) {
-        // Update existing entry
         const { error: updateError } = await supabase
           .from('kpi_entries')
           .update({ value })
@@ -270,7 +260,6 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           
         if (updateError) throw updateError;
       } else {
-        // Insert new entry
         const { error: insertError } = await supabase
           .from('kpi_entries')
           .insert({ 
@@ -327,9 +316,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
       return newData;
     });
     
-    // Save to Supabase
     try {
-      // Check if goal exists
       const { data, error } = await supabase
         .from('kpi_goals')
         .select('id')
@@ -338,12 +325,11 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
         .eq('category', category)
         .single();
         
-      if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
+      if (error && error.code !== 'PGRST116') {
         throw error;
       }
       
       if (data?.id) {
-        // Update existing goal
         const { error: updateError } = await supabase
           .from('kpi_goals')
           .update({ 
@@ -355,7 +341,6 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           
         if (updateError) throw updateError;
       } else {
-        // Insert new goal
         const { error: insertError } = await supabase
           .from('kpi_goals')
           .insert({ 
@@ -384,9 +369,6 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
       ...prevData,
       history: [...prevData.history, { date, metrics }]
     }));
-    
-    // This would need additional logic to store history in Supabase
-    // Currently not implemented
   };
 
   const resetValues = async (timeFrame: TimeFrame) => {
@@ -395,7 +377,6 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
     const today = new Date().toISOString().split('T')[0];
     
     try {
-      // Delete entries for today for the specified timeFrame
       const { error } = await supabase
         .from('kpi_entries')
         .delete()
@@ -405,22 +386,18 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
         
       if (error) throw error;
       
-      // Update local state
       setKpiData(prevData => {
         const newData = { ...prevData };
         
         if (timeFrame === 'daily') {
-          // Reset all daily values
           Object.keys(newData.daily).forEach(key => {
             newData.daily[key as keyof typeof newData.daily].currentValue = 0;
           });
         } else if (timeFrame === 'weekly') {
-          // Reset all weekly values
           Object.keys(newData.weekly).forEach(key => {
             newData.weekly[key as keyof typeof newData.weekly].currentValue = 0;
           });
         } else if (timeFrame === 'monthly') {
-          // Reset all monthly values
           Object.keys(newData.monthly).forEach(key => {
             newData.monthly[key as keyof typeof newData.monthly].currentValue = 0;
           });
