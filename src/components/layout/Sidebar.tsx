@@ -1,14 +1,6 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  BarChart3,
-  CalendarDays,
-  Gauge,
-  LineChart,
-  Settings,
-  User,
-} from "lucide-react";
+import { BarChart3, Gauge, LineChart, Settings, User } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 interface SidebarProps {
@@ -23,24 +15,14 @@ interface SidebarItem {
 
 const items: SidebarItem[] = [
   {
-    title: "Dashboard",
-    icon: <Gauge className="h-5 w-5" />,
+    title: "Sales",
+    icon: <LineChart className="h-5 w-5" />,
     path: "/",
   },
   {
-    title: "Daily KPIs",
+    title: "Finance",
     icon: <BarChart3 className="h-5 w-5" />,
-    path: "/daily",
-  },
-  {
-    title: "Weekly KPIs",
-    icon: <LineChart className="h-5 w-5" />,
-    path: "/weekly",
-  },
-  {
-    title: "Monthly KPIs",
-    icon: <CalendarDays className="h-5 w-5" />,
-    path: "/monthly",
+    path: "/finance",
   },
   {
     title: "Settings",
@@ -61,7 +43,7 @@ export function Sidebar({ className }: SidebarProps) {
           to="/"
           className="flex items-center gap-2 font-semibold text-lg text-white"
         >
-          <BarChart3 className="h-6 w-6" />
+          <Gauge className="h-6 w-6" />
           <span>Envision Studios</span>
         </Link>
       </div>
