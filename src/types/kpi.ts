@@ -1,4 +1,3 @@
-
 export interface KpiGoal {
   id: string;
   name: string;
@@ -42,5 +41,46 @@ export interface KpiData {
   }[];
 }
 
-export type TimeFrame = 'daily' | 'weekly' | 'monthly';
-export type GoalCategory = keyof DailyGoals | keyof WeeklyGoals | keyof MonthlyGoals;
+// New types for chart data
+export interface WeeklyActivityTrendDataPoint {
+  date: string; // e.g., "Mon", "Tue"
+  Emails: number;
+  Calls: number;
+  Meetings: number;
+  [key: string]: string | number; // Add index signature for chart compatibility
+}
+
+export interface MonthlyPipelineDataPoint {
+  name: string; // e.g., "Week 1", "Week 2"
+  Value: number;
+  [key: string]: string | number; // Add index signature for chart compatibility
+}
+
+// Add KpiContextType definition here
+export interface KpiContextType {
+  kpiData: KpiData;
+  updateKpiValue: (
+    timeFrame: TimeFrame,
+    category: string,
+    value: number
+  ) => void;
+  updateGoalTarget: (
+    timeFrame: TimeFrame,
+    category: string,
+    min: number,
+    max: number
+  ) => void;
+  addHistoryEntry: (date: string, metrics: Record<string, number>) => void;
+  resetDailyValues: () => void;
+  resetWeeklyValues: () => void;
+  resetMonthlyValues: () => void;
+  isLoading: boolean;
+  weeklyActivityTrend: WeeklyActivityTrendDataPoint[];
+  monthlyPipelineTrend: MonthlyPipelineDataPoint[];
+}
+
+export type TimeFrame = "daily" | "weekly" | "monthly";
+export type GoalCategory =
+  | keyof DailyGoals
+  | keyof WeeklyGoals
+  | keyof MonthlyGoals;
