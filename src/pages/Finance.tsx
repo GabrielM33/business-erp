@@ -29,7 +29,7 @@ type FinanceMetric = {
 };
 
 type FinanceData = {
-  totalRevenue: FinanceMetric;
+  mrr: FinanceMetric;
   grossProfitMargin: FinanceMetric;
   operatingCashFlow: FinanceMetric;
   burnRate: FinanceMetric;
@@ -38,7 +38,7 @@ type FinanceData = {
 export default function Finance() {
   // Use state for finance data
   const [financeData, setFinanceData] = useState<FinanceData>({
-    totalRevenue: { value: "$0", change: "+0%" },
+    mrr: { value: "$0", change: "+0%" },
     grossProfitMargin: { value: "0%", change: "+0%" },
     operatingCashFlow: { value: "$0", change: "+0%" },
     burnRate: { value: "$0/mo", status: "Stable" },
@@ -52,7 +52,7 @@ export default function Finance() {
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Control dialog open state explicitly
 
   const metricDisplayNames: Record<keyof FinanceData, string> = {
-    totalRevenue: "Total Revenue (YTD)",
+    mrr: "Monthly Recurring Revenue (MRR)",
     grossProfitMargin: "Gross Profit Margin",
     operatingCashFlow: "Operating Cash Flow (Last Q)",
     burnRate: "Burn Rate",
@@ -113,23 +113,21 @@ export default function Finance() {
         <h1 className="text-3xl font-bold tracking-tight">Finance Dashboard</h1>
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {/* Total Revenue Card */}
+          {/* MRR Card */}
           <Card
             className="cursor-pointer hover:shadow-md transition-shadow"
-            onClick={() => handleCardClick("totalRevenue")}
+            onClick={() => handleCardClick("mrr")}
           >
             <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
               <CardTitle className="text-sm font-medium">
-                {metricDisplayNames.totalRevenue}
+                {metricDisplayNames.mrr}
               </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {financeData.totalRevenue.value}
-              </div>
+              <div className="text-2xl font-bold">{financeData.mrr.value}</div>
               <p className="text-xs text-muted-foreground">
-                {financeData.totalRevenue.change} from last period
+                {financeData.mrr.change} from last period
               </p>
             </CardContent>
           </Card>
