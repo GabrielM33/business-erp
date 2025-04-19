@@ -1,11 +1,9 @@
-import { useContext, useState, useEffect, ReactNode } from "react";
+import { useState, useEffect, ReactNode } from "react";
 import {
   KpiData,
-  KpiGoal,
   TimeFrame,
   WeeklyActivityTrendDataPoint,
   MonthlyPipelineDataPoint,
-  KpiContextType,
 } from "@/types/kpi";
 import { v4 as uuidv4 } from "@/lib/uuid";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,16 +13,16 @@ import { KpiContext } from "./kpiContextObject";
 
 const initialKpiData: KpiData = {
   daily: {
-    emailsSent: {
+    newLeadsProspected: {
       id: uuidv4(),
-      name: "Emails Sent",
+      name: "New Leads Prospected",
       target: { min: 50, max: 100 },
       unit: "",
       currentValue: 0,
     },
-    coldCallsMade: {
+    emailsSent: {
       id: uuidv4(),
-      name: "Cold Calls Made",
+      name: "Emails Sent",
       target: { min: 30, max: 60 },
       unit: "",
       currentValue: 0,
@@ -36,9 +34,9 @@ const initialKpiData: KpiData = {
       unit: "",
       currentValue: 0,
     },
-    newLeadsProspected: {
+    followUps: {
       id: uuidv4(),
-      name: "New Leads Prospected",
+      name: "Follow Ups",
       target: { min: 15, max: 30 },
       unit: "",
       currentValue: 0,
@@ -226,7 +224,12 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           .select("entry_date, category, value")
           .eq("user_id", user.id)
           .eq("time_frame", "daily")
-          .in("category", ["emailsSent", "coldCallsMade", "meetingsBooked"])
+          .in("category", [
+            "newLeadsProspected",
+            "emailsSent",
+            "followUps",
+            "meetingsBooked",
+          ])
           .gte("entry_date", sevenDaysAgoStr)
           .lte("entry_date", todayStr)
           .order("entry_date", { ascending: true });
@@ -235,8 +238,9 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
 
         const trendData: WeeklyActivityTrendDataPoint[] = [];
         type TempTrendDataType = {
+          Leads: number;
           Emails: number;
-          Calls: number;
+          FollowUps: number;
           Meetings: number;
         };
         const tempTrendData: { [date: string]: TempTrendDataType } = {};
@@ -250,7 +254,12 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
             weekday: "short",
           });
           dateMap[dateStr] = dayName;
-          tempTrendData[dateStr] = { Emails: 0, Calls: 0, Meetings: 0 };
+          tempTrendData[dateStr] = {
+            Leads: 0,
+            Emails: 0,
+            FollowUps: 0,
+            Meetings: 0,
+          };
         }
 
         if (dailyEntries) {
@@ -260,8 +269,11 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
                 case "emailsSent":
                   tempTrendData[entry.entry_date].Emails = entry.value;
                   break;
-                case "coldCallsMade":
-                  tempTrendData[entry.entry_date].Calls = entry.value;
+                case "newLeadsProspected":
+                  tempTrendData[entry.entry_date].Leads = entry.value;
+                  break;
+                case "followUps":
+                  tempTrendData[entry.entry_date].FollowUps = entry.value;
                   break;
                 case "meetingsBooked":
                   tempTrendData[entry.entry_date].Meetings = entry.value;
@@ -276,8 +288,9 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           .forEach((dateStr) => {
             const dataPoint: WeeklyActivityTrendDataPoint = {
               date: dateMap[dateStr],
+              Leads: tempTrendData[dateStr].Leads,
               Emails: tempTrendData[dateStr].Emails,
-              Calls: tempTrendData[dateStr].Calls,
+              FollowUps: tempTrendData[dateStr].FollowUps,
               Meetings: tempTrendData[dateStr].Meetings,
             };
             trendData.push(dataPoint);

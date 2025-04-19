@@ -11,9 +11,9 @@ export interface KpiGoal {
 
 export interface DailyGoals {
   emailsSent: KpiGoal;
-  coldCallsMade: KpiGoal;
   linkedinConnections: KpiGoal;
   newLeadsProspected: KpiGoal;
+  followUps: KpiGoal;
   meetingsBooked: KpiGoal;
 }
 
@@ -44,8 +44,9 @@ export interface KpiData {
 // New types for chart data
 export interface WeeklyActivityTrendDataPoint {
   date: string; // e.g., "Mon", "Tue"
+  Leads: number;
   Emails: number;
-  Calls: number;
+  FollowUps: number;
   Meetings: number;
   [key: string]: string | number; // Add index signature for chart compatibility
 }
