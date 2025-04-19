@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +12,7 @@ import DailyKPIs from "./pages/DailyKPIs";
 import WeeklyKPIs from "./pages/WeeklyKPIs";
 import MonthlyKPIs from "./pages/MonthlyKPIs";
 import Settings from "./pages/Settings";
+import Finance from "./pages/Finance";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
@@ -28,31 +28,66 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
-              <Route path="/" element={
-                <RequireAuth>
-                  <DashboardLayout><Dashboard /></DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/daily" element={
-                <RequireAuth>
-                  <DashboardLayout><DailyKPIs /></DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/weekly" element={
-                <RequireAuth>
-                  <DashboardLayout><WeeklyKPIs /></DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/monthly" element={
-                <RequireAuth>
-                  <DashboardLayout><MonthlyKPIs /></DashboardLayout>
-                </RequireAuth>
-              } />
-              <Route path="/settings" element={
-                <RequireAuth>
-                  <DashboardLayout><Settings /></DashboardLayout>
-                </RequireAuth>
-              } />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Dashboard />
+                    </DashboardLayout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/daily"
+                element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <DailyKPIs />
+                    </DashboardLayout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/weekly"
+                element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <WeeklyKPIs />
+                    </DashboardLayout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/monthly"
+                element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <MonthlyKPIs />
+                    </DashboardLayout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/finance"
+                element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Finance />
+                    </DashboardLayout>
+                  </RequireAuth>
+                }
+              />
+              <Route
+                path="/settings"
+                element={
+                  <RequireAuth>
+                    <DashboardLayout>
+                      <Settings />
+                    </DashboardLayout>
+                  </RequireAuth>
+                }
+              />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
