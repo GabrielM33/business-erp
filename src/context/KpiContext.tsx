@@ -27,9 +27,9 @@ const initialKpiData: KpiData = {
       unit: "",
       currentValue: 0,
     },
-    linkedinConnections: {
+    linkedinDMsSent: {
       id: uuidv4(),
-      name: "LinkedIn Connections",
+      name: "LinkedIn DMs Sent",
       target: { min: 10, max: 20 },
       unit: "",
       currentValue: 0,
@@ -227,6 +227,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           .in("category", [
             "newLeadsProspected",
             "emailsSent",
+            "linkedinDMsSent",
             "followUps",
             "meetingsBooked",
           ])
@@ -240,6 +241,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
         type TempTrendDataType = {
           Leads: number;
           Emails: number;
+          DMs: number;
           FollowUps: number;
           Meetings: number;
         };
@@ -257,6 +259,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           tempTrendData[dateStr] = {
             Leads: 0,
             Emails: 0,
+            DMs: 0,
             FollowUps: 0,
             Meetings: 0,
           };
@@ -266,11 +269,14 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           dailyEntries.forEach((entry) => {
             if (tempTrendData[entry.entry_date]) {
               switch (entry.category) {
+                case "newLeadsProspected":
+                  tempTrendData[entry.entry_date].Leads = entry.value;
+                  break;
                 case "emailsSent":
                   tempTrendData[entry.entry_date].Emails = entry.value;
                   break;
-                case "newLeadsProspected":
-                  tempTrendData[entry.entry_date].Leads = entry.value;
+                case "linkedinDMsSent":
+                  tempTrendData[entry.entry_date].DMs = entry.value;
                   break;
                 case "followUps":
                   tempTrendData[entry.entry_date].FollowUps = entry.value;
@@ -290,6 +296,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
               date: dateMap[dateStr],
               Leads: tempTrendData[dateStr].Leads,
               Emails: tempTrendData[dateStr].Emails,
+              DMs: tempTrendData[dateStr].DMs,
               FollowUps: tempTrendData[dateStr].FollowUps,
               Meetings: tempTrendData[dateStr].Meetings,
             };

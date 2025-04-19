@@ -228,7 +228,7 @@ export default function Dashboard() {
               <CardContent>
                 <AreaChart
                   data={weeklyActivityTrend}
-                  dataKeys={["Leads", "Emails", "FollowUps", "Meetings"]}
+                  dataKeys={["Leads", "Emails", "DMs", "FollowUps", "Meetings"]}
                 />
               </CardContent>
             </Card>
