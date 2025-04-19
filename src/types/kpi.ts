@@ -14,7 +14,7 @@ export interface DailyGoals {
   emailsSent: KpiGoal;
   DMsSent: KpiGoal;
   followUps: KpiGoal;
-  meetingsBooked: KpiGoal;
+  conversationsStarted: KpiGoal;
 }
 
 export interface WeeklyGoals {
@@ -48,7 +48,7 @@ export interface WeeklyActivityTrendDataPoint {
   Emails: number;
   DMs: number;
   FollowUps: number;
-  Meetings: number;
+  Convos: number;
   [key: string]: string | number; // Add index signature for chart compatibility
 }
 

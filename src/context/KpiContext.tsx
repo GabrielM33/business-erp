@@ -41,9 +41,9 @@ const initialKpiData: KpiData = {
       unit: "",
       currentValue: 0,
     },
-    meetingsBooked: {
+    conversationsStarted: {
       id: uuidv4(),
-      name: "Meetings Booked",
+      name: "Conversations Started",
       target: { min: 1, max: 2 },
       unit: "",
       currentValue: 0,
@@ -229,7 +229,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
             "emailsSent",
             "DMsSent",
             "followUps",
-            "meetingsBooked",
+            "conversationsStarted",
           ])
           .gte("entry_date", sevenDaysAgoStr)
           .lte("entry_date", todayStr)
@@ -243,7 +243,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           Emails: number;
           DMs: number;
           FollowUps: number;
-          Meetings: number;
+          Convos: number;
         };
         const tempTrendData: { [date: string]: TempTrendDataType } = {};
         const dateMap: { [dateStr: string]: string } = {};
@@ -261,7 +261,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
             Emails: 0,
             DMs: 0,
             FollowUps: 0,
-            Meetings: 0,
+            Convos: 0,
           };
         }
 
@@ -281,8 +281,8 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
                 case "followUps":
                   tempTrendData[entry.entry_date].FollowUps = entry.value;
                   break;
-                case "meetingsBooked":
-                  tempTrendData[entry.entry_date].Meetings = entry.value;
+                case "conversationsStarted":
+                  tempTrendData[entry.entry_date].Convos = entry.value;
                   break;
               }
             }
@@ -298,7 +298,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
               Emails: tempTrendData[dateStr].Emails,
               DMs: tempTrendData[dateStr].DMs,
               FollowUps: tempTrendData[dateStr].FollowUps,
-              Meetings: tempTrendData[dateStr].Meetings,
+              Convos: tempTrendData[dateStr].Convos,
             };
             trendData.push(dataPoint);
           });
