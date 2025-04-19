@@ -10,9 +10,9 @@ export interface KpiGoal {
 }
 
 export interface DailyGoals {
-  emailsSent: KpiGoal;
-  linkedinDMsSent: KpiGoal;
   newLeadsProspected: KpiGoal;
+  emailsSent: KpiGoal;
+  DMsSent: KpiGoal;
   followUps: KpiGoal;
   meetingsBooked: KpiGoal;
 }
@@ -46,9 +46,9 @@ export interface WeeklyActivityTrendDataPoint {
   date: string; // e.g., "Mon", "Tue"
   Leads: number;
   Emails: number;
+  DMs: number;
   FollowUps: number;
   Meetings: number;
-  DMs: number; // Add field for LinkedIn DMs
   [key: string]: string | number; // Add index signature for chart compatibility
 }
 

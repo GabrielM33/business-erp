@@ -27,9 +27,9 @@ const initialKpiData: KpiData = {
       unit: "",
       currentValue: 0,
     },
-    linkedinDMsSent: {
+    DMsSent: {
       id: uuidv4(),
-      name: "LinkedIn DMs Sent",
+      name: "DMs Sent",
       target: { min: 10, max: 20 },
       unit: "",
       currentValue: 0,
@@ -227,7 +227,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           .in("category", [
             "newLeadsProspected",
             "emailsSent",
-            "linkedinDMsSent",
+            "DMsSent",
             "followUps",
             "meetingsBooked",
           ])
@@ -275,7 +275,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
                 case "emailsSent":
                   tempTrendData[entry.entry_date].Emails = entry.value;
                   break;
-                case "linkedinDMsSent":
+                case "DMsSent":
                   tempTrendData[entry.entry_date].DMs = entry.value;
                   break;
                 case "followUps":
