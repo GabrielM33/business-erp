@@ -10,7 +10,7 @@ export interface KpiGoal {
 }
 
 export interface DailyGoals {
-  newLeadsProspected: KpiGoal;
+  leadsProspected: KpiGoal;
   emailsSent: KpiGoal;
   DMsSent: KpiGoal;
   followUps: KpiGoal;

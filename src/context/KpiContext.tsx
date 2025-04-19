@@ -13,9 +13,9 @@ import { KpiContext } from "./kpiContextObject";
 
 const initialKpiData: KpiData = {
   daily: {
-    newLeadsProspected: {
+    leadsProspected: {
       id: uuidv4(),
-      name: "New Leads Prospected",
+      name: "Leads Prospected",
       target: { min: 50, max: 100 },
       unit: "",
       currentValue: 0,
@@ -225,7 +225,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           .eq("user_id", user.id)
           .eq("time_frame", "daily")
           .in("category", [
-            "newLeadsProspected",
+            "leadsProspected",
             "emailsSent",
             "DMsSent",
             "followUps",
@@ -269,7 +269,7 @@ export const KpiProvider = ({ children }: { children: ReactNode }) => {
           dailyEntries.forEach((entry) => {
             if (tempTrendData[entry.entry_date]) {
               switch (entry.category) {
-                case "newLeadsProspected":
+                case "leadsProspected":
                   tempTrendData[entry.entry_date].Leads = entry.value;
                   break;
                 case "emailsSent":
